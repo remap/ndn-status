@@ -26,33 +26,42 @@ import org.ccnx.ccn.protocol.SignedInfo;
  * @author takeda
  */
 final public class PathChar implements CCNFilterListener {
-
 	final private CCNHandle _ccn_handle;
 	final private ContentName _service_uri;
 	final private PrivateKey _signing_key;
 	final private PublisherPublicKeyDigest _publisher;
 	final private KeyLocator _locator;
 
-	public PathChar(ContentName namespace) throws MalformedContentNameStringException {
+	public PathChar(ContentName namespace)
+					throws MalformedContentNameStringException
+	{
 		_ccn_handle = CCNHandle.getHandle();
 		_service_uri = ContentName.fromNative(namespace, "pathchar");
-		
+
 		KeyManager keymanager = _ccn_handle.keyManager();
 		this._signing_key = keymanager.getDefaultSigningKey();
 		this._publisher = keymanager.getPublisherKeyID(_signing_key);
 		this._locator = keymanager.getKeyLocator(_signing_key);
 	}
 
-	public void startListening() throws IOException {
+	public void startListening()
+					throws IOException
+	{
 		_ccn_handle.registerFilter(_service_uri, this);
 	}
-	
-	public void stopListening() {
+
+	public void stopListening()
+	{
 		_ccn_handle.unregisterFilter(_service_uri, this);
 	}
 
-	public boolean handleInterest(Interest interest) {
+	public boolean handleInterest(Interest interest)
+	{
 		ContentName name = interest.name();
+
+		//XXX: hack to mage ccnls not get in a loop producing garbage
+		if (interest.exclude() != null && !interest.exclude().empty())
+			return false;
 
 		System.err.println("Got request for: " + name.toURIString());
 
@@ -64,11 +73,14 @@ final public class PathChar implements CCNFilterListener {
 			_ccn_handle.put(co);
 
 			return true;
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (InvalidKeyException ex) {
+		}
+		catch (InvalidKeyException ex) {
 			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (SignatureException ex) {
+		}
+		catch (SignatureException ex) {
 			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
 		}
 

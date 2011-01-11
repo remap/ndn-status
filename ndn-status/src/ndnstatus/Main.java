@@ -7,6 +7,7 @@ package ndnstatus;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.ccnx.ccn.impl.support.Log;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
@@ -15,8 +16,8 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author takeda
  */
 public class Main {
-
-	private static void usage() {
+	private static void usage()
+	{
 		System.err.println("ndn-status <URI>");
 		System.exit(10);
 	}
@@ -24,7 +25,8 @@ public class Main {
 	/**
 	 * @param args the command line arguments
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args)
+	{
 		ContentName namespace;
 		PathChar pathchar;
 		Status status;
@@ -33,6 +35,7 @@ public class Main {
 			usage();
 
 		try {
+			Log.setDefaultLevel(Log.FAC_ALL, Level.SEVERE);
 			namespace = ContentName.fromURI(args[0]);
 
 			pathchar = new PathChar(namespace);
@@ -40,9 +43,11 @@ public class Main {
 
 			pathchar.startListening();
 			status.startListening();
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (MalformedContentNameStringException ex) {
+		}
+		catch (MalformedContentNameStringException ex) {
 			usage();
 		}
 	}
