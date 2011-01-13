@@ -54,6 +54,7 @@ require($BaseDir."tests/udp.inc.php");
 require($BaseDir."tests/mysql.inc.php");
 require($BaseDir."tests/imap.inc.php");
 require($BaseDir."tests/smtp.inc.php");
+require($BaseDir."tests/ccnx.inc.php");
 
 require($BaseDir."tests/dns.inc.php");
 require($BaseDir."tests/nats-dns.inc.php"); // the wrapper module
