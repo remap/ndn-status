@@ -1,8 +1,8 @@
 Ok so not sure what to mention about it... It's fairly straight
 forward.
 
-The code probably before it will be used should be changed to run as
-daemon... I'll do that later.
+To run the code in background you can type:
+nohup java -jar ndn-status.jar /ucla.edu/host/borges.metwi </dev/null 2>&1 >/dev/null &
 
 So to start it you run it as:
 java -jar ndn-status.jar <uri>

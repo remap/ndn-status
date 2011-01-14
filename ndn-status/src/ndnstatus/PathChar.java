@@ -59,11 +59,8 @@ final public class PathChar implements CCNFilterListener {
 	{
 		ContentName name = interest.name();
 
-		//XXX: hack to mage ccnls not get in a loop producing garbage
-		if (interest.exclude() != null && !interest.exclude().empty())
-			return false;
-
-		System.err.println("Got request for: " + name.toURIString());
+		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
+			return true;
 
 		try {
 			SignedInfo si = new SignedInfo(

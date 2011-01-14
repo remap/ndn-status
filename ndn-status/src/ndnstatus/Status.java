@@ -263,9 +263,8 @@ public final class Status implements CCNFilterListener {
 	public boolean handleInterest(Interest interest) {
 		ContentName postfix = interest.name().postfix(_service_uri);
 
-		//XXX: hack to mage ccnls not get in a loop producing garbage
-		if (interest.exclude() != null && !interest.exclude().empty())
-			return false;
+		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
+			return true;
 
 		try {
 			if (postfix.count() == 0)
