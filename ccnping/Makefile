@@ -33,7 +33,7 @@ rmtmp:
 	$(RM) *.o
 
 clean: rmtmp
-	$(RM) $(PROG_RECEIVER) $(PROG_SENDER)
+	$(RM) $(PROG_PING)
 
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<
