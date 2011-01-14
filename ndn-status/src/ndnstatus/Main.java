@@ -13,7 +13,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski <takeda@takeda.tk>
  */
 public class Main {
 	private static void usage()

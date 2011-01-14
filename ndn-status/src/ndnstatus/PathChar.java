@@ -23,7 +23,7 @@ import org.ccnx.ccn.protocol.SignedInfo;
 
 /**
  *
- * @author takeda
+ * @author Derek Kulinski <takeda@takeda.tk>
  */
 final public class PathChar implements CCNFilterListener {
 	final private CCNHandle _ccn_handle;

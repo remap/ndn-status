@@ -34,10 +34,9 @@ import org.xml.sax.SAXException;
 
 /**
  * Not sure if there's an interface to directly get those information
- * @author takeda
+ * @author Derek Kulinski <takeda@takeda.tk>
  */
 public final class Status implements CCNFilterListener {
-
 	private final String STATUS_URL = "http://127.0.0.1:9695/";
 	private final String STATUS_XML = "?f=xml";
 	private final CCNHandle _ccn_handle;
@@ -46,7 +45,8 @@ public final class Status implements CCNFilterListener {
 	private final PublisherPublicKeyDigest _publisher;
 	private final KeyLocator _locator;
 
-	public Status(ContentName namespace) {
+	public Status(ContentName namespace)
+	{
 		_ccn_handle = CCNHandle.getHandle();
 		_service_uri = ContentName.fromNative(namespace, "status");
 
@@ -56,15 +56,19 @@ public final class Status implements CCNFilterListener {
 		this._locator = keymanager.getKeyLocator(_signing_key);
 	}
 
-	public void startListening() throws IOException {
+	public void startListening()
+					throws IOException
+	{
 		_ccn_handle.registerFilter(_service_uri, this);
 	}
 
-	public void stopListening() {
+	public void stopListening()
+	{
 		_ccn_handle.unregisterFilter(_service_uri, this);
 	}
 
-	private StringBuilder parseValues(Document doc, String tag) {
+	private StringBuilder parseValues(Document doc, String tag)
+	{
 		StringBuilder sb = new StringBuilder();
 		Node tmpNode, tmpNode2;
 		NodeList tmpNodeList;
@@ -90,7 +94,8 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private StringBuilder parseFace(Node face) {
+	private StringBuilder parseFace(Node face)
+	{
 		StringBuilder sb = new StringBuilder();
 		Node tmpNode, tmpNode2;
 		NodeList tmpNodeList;
@@ -113,7 +118,8 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private StringBuilder parseFaces(Document doc) {
+	private StringBuilder parseFaces(Document doc)
+	{
 		StringBuilder sb = new StringBuilder();
 		Node tmpNode;
 		NodeList tmpNodeList;
@@ -140,7 +146,8 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private StringBuilder parseFentry(Node fe) {
+	private StringBuilder parseFentry(Node fe)
+	{
 		StringBuilder sb = new StringBuilder();
 		Element fentry = (Element) fe;
 
@@ -161,7 +168,8 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private StringBuilder parseForwarding(Document doc) {
+	private StringBuilder parseForwarding(Document doc)
+	{
 		StringBuilder sb = new StringBuilder();
 		Node tmpNode;
 		NodeList tmpNodeList, fentryList;
@@ -190,7 +198,8 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private boolean handleTextStatus(Interest interest) {
+	private boolean handleTextStatus(Interest interest)
+	{
 		try {
 			StringBuilder sb = new StringBuilder();
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -210,28 +219,36 @@ public final class Status implements CCNFilterListener {
 			SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.DATA,
 							_locator, 60, null);
 
-			ContentObject co = new ContentObject(interest.name(), si, sb.toString().getBytes(), _signing_key);
+			ContentObject co = new ContentObject(interest.name(), si,
+							sb.toString().getBytes(), _signing_key);
 			_ccn_handle.put(co);
 
 			return true;
-		} catch (InvalidKeyException ex) {
+		}
+		catch (InvalidKeyException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (SignatureException ex) {
+		}
+		catch (SignatureException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (SAXException ex) {
+		}
+		catch (SAXException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (ParserConfigurationException ex) {
+		}
+		catch (ParserConfigurationException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		return false;
 	}
 
-	private boolean handleMLStatus(URL url, Interest interest) {
+	private boolean handleMLStatus(URL url, Interest interest)
+	{
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+							url.openStream()));
 			String str;
 			StringBuilder sb = new StringBuilder();
 
@@ -245,22 +262,27 @@ public final class Status implements CCNFilterListener {
 
 			SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.DATA,
 							_locator, 60, null);
-			ContentObject co = new ContentObject(interest.name(), si, content, _signing_key);
+			ContentObject co = new ContentObject(interest.name(), si, content,
+							_signing_key);
 			_ccn_handle.put(co);
 
 			return true;
-		} catch (InvalidKeyException ex) {
+		}
+		catch (InvalidKeyException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (SignatureException ex) {
+		}
+		catch (SignatureException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IOException ex) {
+		}
+		catch (IOException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		return false;
 	}
 
-	public boolean handleInterest(Interest interest) {
+	public boolean handleInterest(Interest interest)
+	{
 		ContentName postfix = interest.name().postfix(_service_uri);
 
 		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
@@ -278,7 +300,8 @@ public final class Status implements CCNFilterListener {
 				return handleMLStatus(url, interest);
 			}
 
-		} catch (MalformedURLException ex) {
+		}
+		catch (MalformedURLException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
