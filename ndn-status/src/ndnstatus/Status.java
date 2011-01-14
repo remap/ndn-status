@@ -7,11 +7,8 @@ package ndnstatus;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.InvalidKeyException;
 import java.security.PrivateKey;
-import java.security.SignatureException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -20,12 +17,14 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.KeyManager;
+import org.ccnx.ccn.io.CCNOutputStream;
+import org.ccnx.ccn.io.CCNVersionedOutputStream;
+import org.ccnx.ccn.profiles.VersioningProfile;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
-import org.ccnx.ccn.protocol.SignedInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -75,11 +74,11 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = doc.getElementsByTagName(tag);
 		if (tmpNodeList.getLength() != 1)
-			return sb.append("* I expected only one " + tag + " tag *");
+			return sb.append("* I expected only one ").append(tag).append(" tag *");
 
 		Node tagNode = tmpNodeList.item(0);
 		if (tagNode.getNodeType() != Node.ELEMENT_NODE)
-			return sb.append("* " + tag + " node is not an element node *");
+			return sb.append("* ").append(tag).append(" node is not an element node *");
 
 		tmpNodeList = tagNode.getChildNodes();
 		for (int i = 0; i < tmpNodeList.getLength(); i++) {
@@ -198,13 +197,16 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
-	private boolean handleTextStatus(Interest interest)
+	private StringBuilder generateTextStatus(Interest interest)
 	{
+		StringBuilder sb = new StringBuilder();
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db;
+		Document doc;
+
 		try {
-			StringBuilder sb = new StringBuilder();
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document doc = db.parse(STATUS_URL + STATUS_XML);
+			db = dbf.newDocumentBuilder();
+			doc = db.parse(STATUS_URL + STATUS_XML);
 			doc.getDocumentElement().normalize();
 
 			sb.append("Content items:");
@@ -215,93 +217,85 @@ public final class Status implements CCNFilterListener {
 			sb.append(parseFaces(doc));
 			sb.append("Forwarding:\n");
 			sb.append(parseForwarding(doc));
-
-			SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.DATA,
-							_locator, 60, null);
-
-			ContentObject co = new ContentObject(interest.name(), si,
-							sb.toString().getBytes(), _signing_key);
-			_ccn_handle.put(co);
-
-			return true;
-		}
-		catch (InvalidKeyException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (SignatureException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		catch (SAXException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
+			sb.append('\n').append(ex.getMessage());
 		}
 		catch (IOException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
+			sb.append('\n').append(ex.getMessage());
 		}
 		catch (ParserConfigurationException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
+			sb.append('\n').append(ex.getMessage());
 		}
 
-		return false;
+		return sb;
 	}
 
-	private boolean handleMLStatus(URL url, Interest interest)
+	private StringBuilder generateMLStatus(URL url, Interest interest)
 	{
+		StringBuilder sb = new StringBuilder();
+		String str;
+
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(
 							url.openStream()));
-			String str;
-			StringBuilder sb = new StringBuilder();
 
 			while ((str = in.readLine()) != null) {
 				sb.append(str);
 				sb.append('\n');
 			}
+
 			in.close();
-
-			byte[] content = sb.toString().getBytes();
-
-			SignedInfo si = new SignedInfo(_publisher, SignedInfo.ContentType.DATA,
-							_locator, 60, null);
-			ContentObject co = new ContentObject(interest.name(), si, content,
-							_signing_key);
-			_ccn_handle.put(co);
-
-			return true;
-		}
-		catch (InvalidKeyException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (SignatureException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		catch (IOException ex) {
-			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
+			sb.append('\n').append(ex.getMessage());
 		}
 
-		return false;
+		return sb;
 	}
 
 	public boolean handleInterest(Interest interest)
 	{
-		ContentName postfix = interest.name().postfix(_service_uri);
+		StringBuilder sb;
+		ContentObject co;
+		ContentName name, postfix;
 
 		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
 			return true;
 
+		//Ignore specific version requests (is this correct?)
+		if (VersioningProfile.hasTerminalVersion(interest.name()))
+			return false;
+
 		try {
+			postfix = interest.name().postfix(_service_uri);
+
 			if (postfix.count() == 0)
-				return handleTextStatus(interest);
+				sb = generateTextStatus(interest);
 			else if (postfix.toString().equals("/html")) {
 				URL url = new URL(STATUS_URL);
-				return handleMLStatus(url, interest);
-
+				sb = generateMLStatus(url, interest);
 			} else if (postfix.toString().equals("/xml")) {
 				URL url = new URL(STATUS_URL + STATUS_XML);
-				return handleMLStatus(url, interest);
+				sb = generateMLStatus(url, interest);
+			} else {
+				System.err.println("Invalid postfix: " + postfix.toString());
+				return true;
 			}
 
+			byte[] data = sb.toString().getBytes();
+
+			CCNOutputStream os = new CCNVersionedOutputStream(interest.name(),
+							_ccn_handle);
+
+			os.addOutstandingInterest(interest);
+			os.setFreshnessSeconds(60);
+			os.write(data, 0, data.length);
+			os.close();
+
+			return true;
 		}
-		catch (MalformedURLException ex) {
+		catch (IOException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 

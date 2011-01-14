@@ -5,21 +5,20 @@
 package ndnstatus;
 
 import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.PrivateKey;
-import java.security.SignatureException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.KeyManager;
+import org.ccnx.ccn.io.CCNOutputStream;
+import org.ccnx.ccn.io.CCNVersionedOutputStream;
+import org.ccnx.ccn.profiles.VersioningProfile;
 import org.ccnx.ccn.protocol.ContentName;
-import org.ccnx.ccn.protocol.ContentObject;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
-import org.ccnx.ccn.protocol.SignedInfo;
 
 /**
  *
@@ -62,22 +61,19 @@ final public class PathChar implements CCNFilterListener {
 		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
 			return true;
 
-		try {
-			SignedInfo si = new SignedInfo(
-							_publisher, SignedInfo.ContentType.DATA, _locator, 5, null);
+		//Ignore specific version requests (is this correct?)
+		if (VersioningProfile.hasTerminalVersion(interest.name()))
+			return false;
 
-			ContentObject co = new ContentObject(name, si, null, _signing_key);
-			_ccn_handle.put(co);
+		try {
+			CCNOutputStream os = new CCNVersionedOutputStream(name, _ccn_handle);
+			os.addOutstandingInterest(interest);
+			os.setFreshnessSeconds(5);
+			os.close();
 
 			return true;
 		}
 		catch (IOException ex) {
-			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (InvalidKeyException ex) {
-			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		catch (SignatureException ex) {
 			Logger.getLogger(PathChar.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
