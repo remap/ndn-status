@@ -16,6 +16,9 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  * @author Derek Kulinski <takeda@takeda.tk>
  */
 public class Main {
+	final static String version = "1.0";
+	final static String git_hash = "$Id$";
+
 	private static void usage()
 	{
 		System.err.println("ndn-status <URI>");
