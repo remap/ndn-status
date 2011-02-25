@@ -62,12 +62,10 @@ public final class Status implements CCNFilterListener {
 
 		STATUS_URL = String.format("http://%s:%s/", hostval, portval);
 		Log.warning("STATUS_URL = {0}", STATUS_URL);
-		
+
 		KeyManager keymanager = _ccn_handle.keyManager();
 		this._signing_key = keymanager.getDefaultSigningKey();
-
 		this._publisher = keymanager.getPublisherKeyID(_signing_key);
-
 		this._locator = keymanager.getKeyLocator(_signing_key);
 	}
 
@@ -75,15 +73,11 @@ public final class Status implements CCNFilterListener {
 					throws IOException
 	{
 		_ccn_handle.registerFilter(_service_uri, this);
-
-
 	}
 
 	public void stopListening()
 	{
 		_ccn_handle.unregisterFilter(_service_uri, this);
-
-
 	}
 
 	private StringBuilder parseValues(Document doc, String tag)
@@ -94,36 +88,26 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = doc.getElementsByTagName(tag);
 
-
 		if (tmpNodeList.getLength() != 1)
 			return sb.append("* I expected only one ").append(tag).append(" tag *");
 
 		Node tagNode = tmpNodeList.item(0);
-
 
 		if (tagNode.getNodeType() != Node.ELEMENT_NODE)
 			return sb.append("* ").append(tag).append(" node is not an element node *");
 
 		tmpNodeList = tagNode.getChildNodes();
 
-
-		for (int i = 0; i
-						< tmpNodeList.getLength(); i++) {
+		for (int i = 0; i < tmpNodeList.getLength(); i++) {
 			tmpNode = tmpNodeList.item(i);
 			tmpNode2 = tmpNode.getFirstChild();
 
 			sb.append(" ").append(tmpNode.getNodeName());
 			sb.append(": ").append(tmpNode2.getNodeValue());
-
-
 		}
 		sb.append('\n');
 
-
-
 		return sb;
-
-
 	}
 
 	private StringBuilder parseFace(Node face)
@@ -134,31 +118,21 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = face.getChildNodes();
 
-
-		for (int i = 0; i
-						< tmpNodeList.getLength(); i++) {
+		for (int i = 0; i < tmpNodeList.getLength(); i++) {
 			tmpNode = tmpNodeList.item(i);
-
-
 
 			if (tmpNode.getNodeType() != Node.ELEMENT_NODE)
 				continue;
 
 			tmpNode2 = tmpNode.getFirstChild();
-
-
 			if (tmpNode2.getNodeType() != Node.TEXT_NODE)
 				continue;
 
 			sb.append(" ").append(tmpNode.getNodeName());
 			sb.append(": ").append(tmpNode2.getNodeValue());
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	private StringBuilder parseFaces(Document doc)
@@ -170,12 +144,10 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = doc.getElementsByTagName("faces");
 
-
 		if (tmpNodeList.getLength() != 1)
 			return sb.append("* expected only one faces tag *");
 
 		tmpNode = tmpNodeList.item(0);
-
 
 		if (tmpNode.getNodeType() != Node.ELEMENT_NODE)
 			return sb.append("* expected faces to be of type Element *");
@@ -184,20 +156,14 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = faces.getElementsByTagName("face");
 
-
-		for (int i = 0; i
-						< tmpNodeList.getLength(); i++) {
+		for (int i = 0; i	< tmpNodeList.getLength(); i++) {
 			tmpNode = tmpNodeList.item(i);
 
 			sb.append(parseFace(tmpNode));
 			sb.append('\n');
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	private StringBuilder parseFentry(Node fe)
@@ -212,21 +178,15 @@ public final class Status implements CCNFilterListener {
 		Node dest = fentry.getElementsByTagName("dest").item(0);
 		NodeList destList = dest.getChildNodes();
 
-
-		for (int i = 0; i
-						< destList.getLength(); i++) {
+		for (int i = 0; i	< destList.getLength(); i++) {
 			Node name = destList.item(i);
 			Node value = name.getFirstChild();
 
 			sb.append(' ').append(name.getNodeName());
 			sb.append(": ").append(value.getNodeValue());
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	private StringBuilder parseForwarding(Document doc)
@@ -238,12 +198,10 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = doc.getElementsByTagName("forwarding");
 
-
 		if (tmpNodeList.getLength() != 1)
 			return sb.append("* expected only one forwarding tag *");
 
 		tmpNode = tmpNodeList.item(0);
-
 
 		if (tmpNode.getNodeType() != Node.ELEMENT_NODE)
 			return sb.append("* expected forwarding to be of type Element *");
@@ -251,25 +209,17 @@ public final class Status implements CCNFilterListener {
 		forwarding = (Element) tmpNode;
 		fentryList = forwarding.getElementsByTagName("fentry");
 
-
-		for (int i = 0; i
-						< fentryList.getLength(); i++) {
+		for (int i = 0; i	< fentryList.getLength(); i++) {
 			Node tmp = fentryList.item(i);
-
-
 
 			if (tmp.getNodeType() != Node.ELEMENT_NODE)
 				continue;
 
 			sb.append(parseFentry(tmp));
 			sb.append('\n');
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	private StringBuilder generateTextStatus(Interest interest)
@@ -278,8 +228,6 @@ public final class Status implements CCNFilterListener {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db;
 		Document doc;
-
-
 
 		try {
 			db = dbf.newDocumentBuilder();
@@ -294,28 +242,18 @@ public final class Status implements CCNFilterListener {
 			sb.append(parseFaces(doc));
 			sb.append("Forwarding:\n");
 			sb.append(parseForwarding(doc));
-
-
 		}
 		catch (SAXException ex) {
 			sb.append('\n').append(ex.getMessage());
-
-
 		}
 		catch (IOException ex) {
 			sb.append('\n').append(ex.getMessage());
-
-
 		}
 		catch (ParserConfigurationException ex) {
 			sb.append('\n').append(ex.getMessage());
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	private StringBuilder generateMLStatus(URL url, Interest interest)
@@ -323,34 +261,22 @@ public final class Status implements CCNFilterListener {
 		StringBuilder sb = new StringBuilder();
 		String str;
 
-
-
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(
 							url.openStream()));
 
-
-
 			while ((str = in.readLine()) != null) {
 				sb.append(str);
 				sb.append('\n');
-
-
 			}
 
 			in.close();
-
-
 		}
 		catch (IOException ex) {
 			sb.append('\n').append(ex.getMessage());
-
-
 		}
 
 		return sb;
-
-
 	}
 
 	public boolean handleInterest(Interest interest)
@@ -359,43 +285,28 @@ public final class Status implements CCNFilterListener {
 		ContentObject co;
 		ContentName name, postfix;
 
-
-
 		if ((interest.answerOriginKind() & Interest.ANSWER_GENERATED) == 0)
 			return true;
 
 		//Ignore specific version requests (is this correct?)
-
-
 		if (VersioningProfile.hasTerminalVersion(interest.name()))
 			return false;
 
-
-
 		try {
 			postfix = interest.name().postfix(_service_uri);
-
-
 
 			if (postfix.count() == 0)
 				sb = generateTextStatus(interest);
 			else if (postfix.toString().equals("/html")) {
 				URL url = new URL(STATUS_URL);
 				sb = generateMLStatus(url, interest);
-
-
 			} else if (postfix.toString().equals("/xml")) {
 				URL url = new URL(STATUS_URL + STATUS_XML);
 				sb = generateMLStatus(url, interest);
-
-
 			} else {
 				System.err.println("Invalid postfix: " + postfix.toString());
 
-
 				return true;
-
-
 			}
 
 			byte[] data = sb.toString().getBytes();
@@ -408,20 +319,12 @@ public final class Status implements CCNFilterListener {
 			os.write(data, 0, data.length);
 			os.close();
 
-
-
 			return true;
-
-
-
 		}
 		catch (IOException ex) {
 			Logger.getLogger(Status.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-
-
 		return false;
-
 	}
 }
