@@ -37,12 +37,20 @@ import org.xml.sax.SAXException;
  * @author Derek Kulinski <takeda@takeda.tk>
  */
 public final class Status implements CCNFilterListener {
+	final static String git_hash = "$Id$";
+
 	private final String STATUS_URL;
+
 	private final String STATUS_XML = "?f=xml";
+
 	private final CCNHandle _ccn_handle;
+
 	private final ContentName _service_uri;
+
 	private final PrivateKey _signing_key;
+
 	private final PublisherPublicKeyDigest _publisher;
+
 	private final KeyLocator _locator;
 
 	public Status(ContentName namespace)
@@ -156,7 +164,7 @@ public final class Status implements CCNFilterListener {
 
 		tmpNodeList = faces.getElementsByTagName("face");
 
-		for (int i = 0; i	< tmpNodeList.getLength(); i++) {
+		for (int i = 0; i < tmpNodeList.getLength(); i++) {
 			tmpNode = tmpNodeList.item(i);
 
 			sb.append(parseFace(tmpNode));
@@ -178,7 +186,7 @@ public final class Status implements CCNFilterListener {
 		Node dest = fentry.getElementsByTagName("dest").item(0);
 		NodeList destList = dest.getChildNodes();
 
-		for (int i = 0; i	< destList.getLength(); i++) {
+		for (int i = 0; i < destList.getLength(); i++) {
 			Node name = destList.item(i);
 			Node value = name.getFirstChild();
 
@@ -209,7 +217,7 @@ public final class Status implements CCNFilterListener {
 		forwarding = (Element) tmpNode;
 		fentryList = forwarding.getElementsByTagName("fentry");
 
-		for (int i = 0; i	< fentryList.getLength(); i++) {
+		for (int i = 0; i < fentryList.getLength(); i++) {
 			Node tmp = fentryList.item(i);
 
 			if (tmp.getNodeType() != Node.ELEMENT_NODE)
@@ -234,9 +242,15 @@ public final class Status implements CCNFilterListener {
 			doc = db.parse(STATUS_URL + STATUS_XML);
 			doc.getDocumentElement().normalize();
 
-			sb.append("ndn-status version: ");
-			sb.append(String.format("%s (%s)\n\n", Main.version, Main.git_hash));
-			sb.append("Content items:");
+			sb.append(String.format("ndn-status version: %s\n", Main.version));
+			sb.append(String.format("%s (%s)\n", Main.class.getSimpleName(),
+							Main.git_hash));
+			sb.append(String.format("%s (%s)\n", PathChar.class.getSimpleName(),
+							PathChar.git_hash));
+			sb.append(String.format("%s (%s)\n", Status.class.getSimpleName(),
+							Status.git_hash));
+	
+			sb.append("\nContent items:");
 			sb.append(parseValues(doc, "cobs"));
 			sb.append("Interests:");
 			sb.append(parseValues(doc, "interests"));

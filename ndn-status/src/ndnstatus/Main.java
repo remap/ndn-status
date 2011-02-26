@@ -17,6 +17,7 @@ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
  */
 public class Main {
 	final static String version = "1.0";
+
 	final static String git_hash = "$Id$";
 
 	private static void usage()

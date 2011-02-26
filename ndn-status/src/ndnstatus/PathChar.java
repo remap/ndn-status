@@ -25,6 +25,8 @@ import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
  * @author Derek Kulinski <takeda@takeda.tk>
  */
 final public class PathChar implements CCNFilterListener {
+	final static String git_hash = "$Id$";
+
 	final private CCNHandle _ccn_handle;
 
 	final private ContentName _service_uri;
