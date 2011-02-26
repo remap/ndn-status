@@ -234,6 +234,8 @@ public final class Status implements CCNFilterListener {
 			doc = db.parse(STATUS_URL + STATUS_XML);
 			doc.getDocumentElement().normalize();
 
+			sb.append("ndn-status version: ");
+			sb.append(String.format("%s (%s)\n\n", Main.version, Main.git_hash));
 			sb.append("Content items:");
 			sb.append(parseValues(doc, "cobs"));
 			sb.append("Interests:");
