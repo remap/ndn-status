@@ -242,15 +242,7 @@ public final class Status implements CCNFilterListener {
 			doc = db.parse(STATUS_URL + STATUS_XML);
 			doc.getDocumentElement().normalize();
 
-			sb.append(String.format("ndn-status version: %s\n", Main.version));
-			sb.append(String.format("%s (%s)\n", Main.class.getSimpleName(),
-							Main.git_hash));
-			sb.append(String.format("%s (%s)\n", PathChar.class.getSimpleName(),
-							PathChar.git_hash));
-			sb.append(String.format("%s (%s)\n", Status.class.getSimpleName(),
-							Status.git_hash));
-	
-			sb.append("\nContent items:");
+			sb.append("Content items:");
 			sb.append(parseValues(doc, "cobs"));
 			sb.append("Interests:");
 			sb.append(parseValues(doc, "interests"));
@@ -295,6 +287,21 @@ public final class Status implements CCNFilterListener {
 		return sb;
 	}
 
+	private StringBuilder generateVersionStatus(Interest interest)
+	{
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(String.format("ndn-status version: %s\n", Main.version));
+		sb.append(String.format("%s (%s)\n", Main.class.getSimpleName(),
+						Main.git_hash));
+		sb.append(String.format("%s (%s)\n", PathChar.class.getSimpleName(),
+						PathChar.git_hash));
+		sb.append(String.format("%s (%s)\n", Status.class.getSimpleName(),
+						Status.git_hash));
+
+		return sb;
+	}
+
 	public boolean handleInterest(Interest interest)
 	{
 		StringBuilder sb;
@@ -319,7 +326,9 @@ public final class Status implements CCNFilterListener {
 			} else if (postfix.toString().equals("/xml")) {
 				URL url = new URL(STATUS_URL + STATUS_XML);
 				sb = generateMLStatus(url, interest);
-			} else {
+			} else if (postfix.toString().equals("/version"))
+				sb = generateVersionStatus(interest);
+			else {
 				System.err.println("Invalid postfix: " + postfix.toString());
 
 				return true;
